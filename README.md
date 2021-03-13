@@ -1,24 +1,17 @@
 # d3-treemap-diagram
 
-## Project setup
-```
-npm install
-```
+Data Visualization Project for freeCodeCamp.org Data Visualization Project: Visualize Data with a
+Treemap Diagram. This implementation uses Vue & D3 as the main technology stacks.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## Project Info
 
-### Compiles and minifies for production
-```
-npm run build
-```
+See the [User
+Stories](https://www.freecodecamp.org/learn/data-visualization/data-visualization-projects/visualize-data-with-a-treemap-diagram)
+for project requirements.
 
-### Lints and fixes files
-```
-npm run lint
-```
+## Integrated Testing Suite
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+freeCodeCamp.org offers a script that will test each User Story point. To test, select the testing
+component (the green three-line-hamburger icon in the upper left corner), choose 'D3 Choropleth Map'
+from the drop-down menu, and hit 'Run Tests'. Select the 'Tests' button after the script is finished
+to see details of test.
