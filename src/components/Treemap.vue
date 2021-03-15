@@ -11,9 +11,8 @@ export default {
       dataUrl:
       'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
       gameData: undefined,
-      widthViewPort: 1200,
-      heightViewPort: 800,
-      mapPosition: '0, 0', // offset for map position
+      widthViewPort: 1100,
+      heightViewPort: 600,
     };
   },
 
@@ -41,18 +40,43 @@ export default {
       // svg group for the mapping of data; helps keep data graphics separate from axis
       const map = svg.append('g')
         .attr('id', 'map')
-        .attr('class', 'map')
-        .attr('transform', `translate(${this.mapPosition})`);
+        .attr('class', 'map');
 
-      const root = d3.hierarchy(this.gameData).sum((d) => d.value);
+      // Here the size of each leave is given in the 'value' field in input data
+      const root = d3.hierarchy(this.gameData)
+        .sum((d) => d.value)
+        .sort((a, b) => b.value - a.value); // arrange categories from largest to smallest
 
-      d3.treemap().size([this.widthViewPort, this.heightViewPort]).padding(1)(root);
+      d3.treemap()
+        .size([this.widthViewPort - 50, this.heightViewPort - 50])
+        // .padding(0.75)
+        .paddingRight(2)
+        .paddingTop(24) // this is the killer
+        .paddingInner(2)(root);
 
-      // draw the boxes
-      map.selectAll('rect')
+      // puts text and rect into their own svg groups; NOTE: only entering data here is required
+      const blockGroup = map.selectAll('.blockGroup')
         .data(root.leaves())
         .enter()
-        .append('rect')
+        .append('g')
+        .attr('class', 'blockGroup');
+
+      // let's add titles for each group
+      map.selectAll('titles')
+        .data(root.descendants().filter((d) => d.depth === 1))
+        .enter()
+        .append('text')
+        .attr('class', 'group-title')
+        .attr('x', (d) => d.x0)
+        .attr('y', (d) => d.y0 + 20)
+        .attr('height', (d) => d.y1 - d.y0)
+        .attr('width', (d) => d.x1 - d.x0)
+        .text((d) => d.data.name)
+        .attr('font-size', '16px')
+        .attr('fill', 'black');
+
+      // draw the boxes
+      blockGroup.append('rect')
         .attr('class', 'tile') // project requirement
         .attr('x', (d) => d.x0)
         .attr('y', (d) => d.y0)
@@ -66,24 +90,14 @@ export default {
         .style('fill', 'green');
 
       // add text within boxes
-      map.selectAll('text')
-        .data(root.leaves())
-        .enter()
-        .append('text')
+      blockGroup.append('text')
         .attr('x', (d) => d.x0 + 5)
         .attr('y', (d) => d.y0 + 12)
         .text((d) => d.data.name)
         .attr('font-size', '10px')
         .attr('fill', 'white');
 
-      // function declaration for tooltip div element
-      const divTool = d3.select('#tooltip-container')
-        .append('g')
-        .attr('id', 'tooltip') // must be here to satisfy project requirement
-        .style('visibility', 'hidden');
-
-      // placeholders to quiet eslint
-      divTool.append('g');
+      // tooltip will be on mouseon()
     },
   },
 };
@@ -91,19 +105,14 @@ export default {
 
 <template>
   <div class="conainter-treemap">
-    <!-- tooltip info displays on mouseover here; id is project requirement -->
-    <div
-      id="tooltip-container"
-      class="tooltip-container"
-      >
-      <!-- show message to user that data is processing; once data is merged,
-        drawing the map is quick -->
+    <!-- show message to user that data is processing; once data is merged,
+      drawing the map is quick -->
       <p
         class="loading-message"
-        v-if="this.loading">
+        v-if="this.loading"
+      >
       Loading...
       </p>
-    </div>
     <!-- d3 treemap map is drawn at #treemap -->
     <div
       class="treemap"
@@ -116,21 +125,4 @@ export default {
 <style lang="scss">
 // DO NOT SCOPE THIS COMPONENT'S STYLE: D3 won't be able to see it
 
-.treemap {
-  margin: auto;
-  width: 85%;
-
-  // scale for tablets and phones
-  @media only screen and  (max-width: 800px) {
-    width: 100%;
-  }
-}
-
-.tooltip-container {
-  font-family: Roboto, Helvetica, Arial, sans-serif;
-  font-size: 24px;
-  font-weight: bold;
-  height: 1.75rem;
-  margin-top: 1.5rem;
-}
 </style>
