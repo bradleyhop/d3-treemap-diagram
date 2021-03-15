@@ -11,8 +11,8 @@ export default {
       dataUrl:
       'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
       gameData: undefined,
-      widthViewPort: 1100,
-      heightViewPort: 600,
+      widthViewPort: 1000,
+      heightViewPort: 650,
     };
   },
 
@@ -31,6 +31,17 @@ export default {
     graphInit() {
       // remove loading message
       this.loading = false;
+
+      const colorScale = d3.scaleOrdinal()
+        .domain(
+          // dynamically add to domain
+          this.gameData.children.map((d) => d.name),
+        )
+        .range(
+          // built-in d3 colorscheme; see: https://github.com/d3/d3-scale-chromatic
+          // d3 will cycle the colors if the domain is larger than the range
+          d3.schemeTableau10,
+        );
 
       const svg = d3.select('#treemap')
         .append('svg')
@@ -61,7 +72,8 @@ export default {
         .append('g')
         .attr('class', 'blockGroup');
 
-      // let's add titles for each group
+      // let's add titles for each group; using map constructor so that title is only displayed once
+      //  per category, instead of once per group item
       map.selectAll('titles')
         .data(root.descendants().filter((d) => d.depth === 1))
         .enter()
@@ -72,8 +84,7 @@ export default {
         .attr('height', (d) => d.y1 - d.y0)
         .attr('width', (d) => d.x1 - d.x0)
         .text((d) => d.data.name)
-        .attr('font-size', '16px')
-        .attr('fill', 'black');
+        .style('fill', (d) => colorScale(d.data.name));
 
       // draw the boxes
       blockGroup.append('rect')
@@ -86,16 +97,14 @@ export default {
         .attr('data-name', (d) => d.data.name)
         .attr('data-category', (d) => d.data.category)
         .attr('data-value', (d) => d.data.value)
-        .style('stroke', 'black')
-        .style('fill', 'green');
+        .style('fill', (d) => colorScale(d.parent.data.name));
 
       // add text within boxes
       blockGroup.append('text')
+        .attr('class', 'tile-text')
         .attr('x', (d) => d.x0 + 5)
         .attr('y', (d) => d.y0 + 12)
-        .text((d) => d.data.name)
-        .attr('font-size', '10px')
-        .attr('fill', 'white');
+        .text((d) => d.data.name);
 
       // tooltip will be on mouseon()
     },
@@ -104,6 +113,7 @@ export default {
 </script>
 
 <template>
+
   <div class="conainter-treemap">
     <!-- show message to user that data is processing; once data is merged,
       drawing the map is quick -->
@@ -125,4 +135,13 @@ export default {
 <style lang="scss">
 // DO NOT SCOPE THIS COMPONENT'S STYLE: D3 won't be able to see it
 
+.group-title {
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+}
+
+.tile-text {
+  font-size: 0.65rem;
+  fill: #fff;
+}
 </style>
