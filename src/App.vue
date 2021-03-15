@@ -78,7 +78,6 @@ body {
   color: $text-default;
   font-family: Roboto, Helvetica, Arial, sans-serif;
   font-size: 1.25rem;
-  margin-bottom: 1rem;
 }
 
 footer {
