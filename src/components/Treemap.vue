@@ -10,9 +10,15 @@ export default {
       // placeholder for the data set
       dataUrl:
       'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
-      gameData: undefined,
+      fetchData: undefined,
       widthViewPort: 1000,
-      heightViewPort: 650,
+      heightViewPort: 850,
+      paddingBottom: 200, // room for legend at bottom
+      // color scheme computed using https://medialab.github.io/iwanthue/ with the fancy (light
+      //  background) preset; 20 colors chosen to cover all three data sets
+      colorBand: ['#c6b9ff', '#edd88d', '#3ab9ee', '#f09288', '#57e1d7', '#f698bc', '#88f1cc',
+        '#ffc2d2', '#a6f6c0', '#fcd8ff', '#a1b372', '#78e6ff', '#cda387', '#94fff4', '#f7ffc3',
+        '#a5e0ff', '#c9ffc8', '#9ebed3', '#c1eeec', '#96beb4'],
     };
   },
 
@@ -21,7 +27,7 @@ export default {
       .then((response) => response.json())
       .then((data) => {
         // store obj within vue; make non-reactive since this data isn't going to change; speedup
-        this.gameData = Object.freeze(data);
+        this.fetchData = Object.freeze(data);
       })
       .then(() => this.graphInit())
       .catch((error) => console.log(error));
@@ -31,16 +37,16 @@ export default {
     graphInit() {
       // remove loading message
       this.loading = false;
+      // main category groups
+      const categories = this.fetchData.children.map((d) => d.name);
 
       const colorScale = d3.scaleOrdinal()
         .domain(
           // dynamically add to domain
-          this.gameData.children.map((d) => d.name),
+          categories,
         )
         .range(
-          // built-in d3 colorscheme; see: https://github.com/d3/d3-scale-chromatic
-          // d3 will cycle the colors if the domain is larger than the range
-          d3.schemeTableau10,
+          this.colorBand,
         );
 
       const svg = d3.select('#treemap')
@@ -54,43 +60,27 @@ export default {
         .attr('class', 'map');
 
       // Here the size of each leave is given in the 'value' field in input data
-      const root = d3.hierarchy(this.gameData)
+      const root = d3.hierarchy(this.fetchData)
         .sum((d) => d.value)
         .sort((a, b) => b.value - a.value); // arrange categories from largest to smallest
 
       d3.treemap()
-        .size([this.widthViewPort - 50, this.heightViewPort - 50])
-        // .padding(0.75)
-        .paddingRight(2)
-        .paddingTop(24) // this is the killer
-        .paddingInner(2)(root);
+        .size([this.widthViewPort, this.heightViewPort - this.paddingBottom])
+        .padding(0.4)(root);
 
       // puts text and rect into their own svg groups; NOTE: only entering data here is required
-      const blockGroup = map.selectAll('.blockGroup')
+      //  set position here so word wrapping in text function works
+      const blockGroup = map.selectAll('g')
         .data(root.leaves())
         .enter()
         .append('g')
+        .attr('transform', (d) => `translate(${d.x0}, ${d.y0})`) // set position of rect and text
         .attr('class', 'blockGroup');
 
-      // let's add titles for each group; using map constructor so that title is only displayed once
-      //  per category, instead of once per group item
-      map.selectAll('titles')
-        .data(root.descendants().filter((d) => d.depth === 1))
-        .enter()
-        .append('text')
-        .attr('class', 'group-title')
-        .attr('x', (d) => d.x0)
-        .attr('y', (d) => d.y0 + 20)
-        .attr('height', (d) => d.y1 - d.y0)
-        .attr('width', (d) => d.x1 - d.x0)
-        .text((d) => d.data.name)
-        .style('fill', (d) => colorScale(d.data.name));
-
       // draw the boxes
-      blockGroup.append('rect')
+      blockGroup
+        .append('rect')
         .attr('class', 'tile') // project requirement
-        .attr('x', (d) => d.x0)
-        .attr('y', (d) => d.y0)
         .attr('width', (d) => d.x1 - d.x0)
         .attr('height', (d) => d.y1 - d.y0)
         // next three attributes are project requirements
@@ -100,13 +90,78 @@ export default {
         .style('fill', (d) => colorScale(d.parent.data.name));
 
       // add text within boxes
-      blockGroup.append('text')
+      blockGroup
+        .append('text')
+        .selectAll('tspan')
+        // split data name to create individual tspan elements; title are given in typical title
+        //  style with each the first letter of all major words capitalized
+        .data((d) => d.data.name.split(/(?=[A-Z][^A-Z])/g))
+        .enter()
+        .append('tspan') // how we get each word on own line
         .attr('class', 'tile-text')
-        .attr('x', (d) => d.x0 + 5)
-        .attr('y', (d) => d.y0 + 12)
-        .text((d) => d.data.name);
+        .attr('x', 4)
+        .attr('y', (d, i) => 10 + (9 * i)) // y position for each tspan element
+        .text((d) => d);
 
-      // tooltip will be on mouseon()
+      // constructor for mouse over tooltip
+      const divTool = d3.select('#treemap')
+        .append('g')
+        .style('opacity', 0);
+
+      // hover to show value with tooltip as defined in divTool above
+      //  this triggers on mouse over box or text in box!
+      blockGroup
+        .on('mouseover', (event, d) => {
+          divTool
+            .style('opacity', 1)
+            .style('display', 'flex') // to align items vertically in css; also display
+            .attr('id', 'tooltip') // project requirement
+            .attr('class', 'tooltip')
+            .attr('data-value', d.data.value) // project requirement
+            .html(`<p>
+            <span class="toolHeading">${d.data.name}</span><br/>
+            <span>${d.data.category}</span><br/>
+            <span>${d.data.value}</span>
+          </p>`)
+          // offsets for tooltip box
+            .style('top', `${event.pageY - 80}px`)
+            .style('left', `${event.pageX - 55}px`);
+        })
+        .on('mouseout', () => {
+          divTool
+            .style('opacity', 0)
+            .style('display', 'none');
+        });
+
+      const legend = map.append('g')
+        .attr('id', 'legend')
+        .attr('class', 'legend')
+        .attr('transform',
+          `translate(${this.widthViewPort / 2}, ${this.heightViewPort - this.paddingBottom})`);
+
+      const squareSize = 15;
+
+      legend.selectAll('rect')
+        .data(categories)
+        .enter()
+        .append('rect')
+        .attr('x', 15)
+        .attr('y', (d, i) => 20 + (i * 10))
+        .attr('width', squareSize)
+        .attr('height', squareSize)
+        .style('fill', (d) => colorScale(d))
+        .attr('class', 'legend-item');
+
+      legend.selectAll('text')
+        .data(categories)
+        .enter()
+        .append('text')
+        .attr('x', 40)
+        .attr('y', (d, i) => 30 + i * 10)
+        .text((d) => d)
+        .attr('class', 'legend-text')
+        .attr('text-anchor', 'left')
+        .style('alignment-baseline', 'middle');
     },
   },
 };
@@ -133,7 +188,7 @@ export default {
 </template>
 
 <style lang="scss">
-// DO NOT SCOPE THIS COMPONENT'S STYLE: D3 won't be able to see it
+// NOTE: DO NOT SCOPE THIS COMPONENT'S STYLE: D3 won't be able to see it
 
 .group-title {
   font-family: Roboto, Helvetica, Arial, sans-serif;
@@ -141,7 +196,29 @@ export default {
 }
 
 .tile-text {
-  font-size: 0.65rem;
-  fill: #fff;
+  font-size: 0.55rem;
+  fill: $text-default;
+}
+
+.legend-text {
+  font-size: 0.55rem;
+  fill: $text-default;
+}
+
+.tooltip {
+  align-items: center;
+  background: #757575;
+  border-radius: 5px;
+  border-style: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  color: #fff;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  position: absolute;
+
+  & .toolHeading {
+    font-weight: bold;
+  }
 }
 </style>
