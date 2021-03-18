@@ -26,7 +26,8 @@ export default {
       class="description"
       id="description"
     >
-    Top 100 Most Sold Video Games Grouped by Platform
+    Top 100 Most Sold Video Games Grouped by Platform<br>
+    In Millions of Units
     </p>
     <Treemap />
   </div>

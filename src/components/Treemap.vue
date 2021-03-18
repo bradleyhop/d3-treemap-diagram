@@ -10,9 +10,9 @@ export default {
       // placeholder for the data set
       dataUrl:
       'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
-      fetchData: undefined,
-      widthViewPort: 1000,
-      heightViewPort: 850,
+      fetchData: undefined, // placeholder for downloaded data
+      widthViewPort: 1050,
+      heightViewPort: 700,
       paddingBottom: 200, // room for legend at bottom
       // color scheme computed using https://medialab.github.io/iwanthue/ with the fancy (light
       //  background) preset; 20 colors chosen to cover all three data sets
@@ -133,35 +133,50 @@ export default {
             .style('display', 'none');
         });
 
-      const legend = map.append('g')
+      // area of svg where our legend entries live
+      const legendContainer = map.append('g')
         .attr('id', 'legend')
         .attr('class', 'legend')
         .attr('transform',
-          `translate(${this.widthViewPort / 2}, ${this.heightViewPort - this.paddingBottom})`);
+          `translate(${this.widthViewPort / 3}, ${this.heightViewPort - this.paddingBottom})`);
+
+      // set position of each entry
+      // see: https://stackoverflow.com/questions/51520596/spread-d3-js-legend-on-two-columns
+      const legend = legendContainer.selectAll('g')
+        .data(categories)
+        .enter()
+        .append('g')
+        .attr('transform', (d, i) => this.positionLegendColumns(i));
 
       const squareSize = 15;
 
-      legend.selectAll('rect')
-        .data(categories)
-        .enter()
-        .append('rect')
-        .attr('x', 15)
-        .attr('y', (d, i) => 20 + (i * 10))
+      legend.append('rect')
         .attr('width', squareSize)
         .attr('height', squareSize)
         .style('fill', (d) => colorScale(d))
         .attr('class', 'legend-item');
 
-      legend.selectAll('text')
-        .data(categories)
-        .enter()
-        .append('text')
-        .attr('x', 40)
-        .attr('y', (d, i) => 30 + i * 10)
+      legend.append('text')
+        // set x and y to set text next to rect, otherwise it gets drawn above
+        .attr('x', 18)
+        .attr('y', 12)
         .text((d) => d)
         .attr('class', 'legend-text')
         .attr('text-anchor', 'left')
         .style('alignment-baseline', 'middle');
+    },
+
+    // take in the index of entry item and return a position of that item in its set
+    positionLegendColumns(index) {
+      const cols = 3; // number of columns
+      const height = 22; // height entry, vertical space between entries
+      const width = 150; // width of entry, horizontal space between entries
+      const tx = 10; // tx and ty are essentially margin values
+      const ty = 10;
+      const x = (index % cols) * width + tx;
+      const y = Math.floor(index / cols) * height + ty;
+
+      return `translate(${x}, ${y})`;
     },
   },
 };
@@ -198,10 +213,12 @@ export default {
 .tile-text {
   font-size: 0.55rem;
   fill: $text-default;
+  cursor: default;
 }
 
 .legend-text {
-  font-size: 0.55rem;
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
   fill: $text-default;
 }
 
