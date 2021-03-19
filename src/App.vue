@@ -16,20 +16,9 @@ export default {
     class="content"
     role="main"
   >
-    <h1
-      class="project-title"
-      id="title"
-    >
-    Video Game Sales
-    </h1>
-    <p
-      class="description"
-      id="description"
-    >
-    Top 100 Most Sold Video Games Grouped by Platform<br>
-    In Millions of Units
-    </p>
+
     <Treemap />
+
   </div>
 
   <footer>
@@ -69,17 +58,6 @@ body {
 
 .content {
   flex: 1 0 auto; // grow page space to content
-}
-
-.project-title {
-  margin: 1rem 0 1rem 0;
-}
-
-.description {
-  color: $text-default;
-  font-family: Roboto, Helvetica, Arial, sans-serif;
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
 }
 
 footer {

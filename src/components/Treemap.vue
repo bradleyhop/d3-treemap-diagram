@@ -6,13 +6,11 @@ export default {
 
   data() {
     return {
-      loading: true, // conditional redning variable to show basic loading status to user
       // placeholder for the data set
       dataUrl:
       'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
-      fetchData: undefined, // placeholder for downloaded data
-      widthViewPort: 1050,
-      heightViewPort: 700,
+      widthViewPort: 875,
+      heightViewPort: 715,
       paddingBottom: 200, // room for legend at bottom
       // color scheme computed using https://medialab.github.io/iwanthue/ with the fancy (light
       //  background) preset; 20 colors chosen to cover all three data sets
@@ -23,22 +21,13 @@ export default {
   },
 
   created() {
-    fetch(this.dataUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        // store obj within vue; make non-reactive since this data isn't going to change; speedup
-        this.fetchData = Object.freeze(data);
-      })
-      .then(() => this.graphInit())
-      .catch((error) => console.log(error));
+    this.getData(this.dataUrl);
   },
 
   methods: {
-    graphInit() {
-      // remove loading message
-      this.loading = false;
+    graphInit(fetchData) {
       // main category groups
-      const categories = this.fetchData.children.map((d) => d.name);
+      const categories = fetchData.children.map((d) => d.name);
 
       const colorScale = d3.scaleOrdinal()
         .domain(
@@ -60,7 +49,7 @@ export default {
         .attr('class', 'map');
 
       // Here the size of each leave is given in the 'value' field in input data
-      const root = d3.hierarchy(this.fetchData)
+      const root = d3.hierarchy(fetchData)
         .sum((d) => d.value)
         .sort((a, b) => b.value - a.value); // arrange categories from largest to smallest
 
@@ -169,7 +158,7 @@ export default {
     // take in the index of entry item and return a position of that item in its set
     positionLegendColumns(index) {
       const cols = 3; // number of columns
-      const height = 22; // height entry, vertical space between entries
+      const height = 22; // height of entry, vertical space between entries
       const width = 150; // width of entry, horizontal space between entries
       const tx = 10; // tx and ty are essentially margin values
       const ty = 10;
@@ -178,21 +167,44 @@ export default {
 
       return `translate(${x}, ${y})`;
     },
+
+    // use javascript fetch to retrieve json data and pass it to graphInit
+    getData(jsonUrl) {
+      let thisData;
+      fetch(jsonUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          thisData = data;
+        })
+        .then(() => this.graphInit(thisData))
+        .catch((error) => console.log(error));
+    },
+  },
+
+  watch: {
+    dataUrl(val) {
+      this.getData(val);
+    },
   },
 };
 </script>
 
 <template>
+  <h1
+    class="project-title"
+    id="title"
+  >
+  Video Game Sales
+  </h1>
+  <p
+    class="description"
+    id="description"
+  >
+  Top 100 Most Sold Video Games Grouped by Platform<br>
+  (In Millions of Units)
+  </p>
 
   <div class="conainter-treemap">
-    <!-- show message to user that data is processing; once data is merged,
-      drawing the map is quick -->
-      <p
-        class="loading-message"
-        v-if="this.loading"
-      >
-      Loading...
-      </p>
     <!-- d3 treemap map is drawn at #treemap -->
     <div
       class="treemap"
@@ -204,6 +216,17 @@ export default {
 
 <style lang="scss">
 // NOTE: DO NOT SCOPE THIS COMPONENT'S STYLE: D3 won't be able to see it
+
+.project-title {
+  margin: 1rem 0 1rem 0;
+}
+
+.description {
+  color: $text-default;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
 
 .group-title {
   font-family: Roboto, Helvetica, Arial, sans-serif;
