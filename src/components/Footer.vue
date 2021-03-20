@@ -26,7 +26,7 @@ export default {
         rel="noopener noreferer"
         target="_blank"
       >
-        Bradley Smith ;*
+        Bradley Smith
       </a>
         &#169;{{ currentYear }}
         [&nbsp;
