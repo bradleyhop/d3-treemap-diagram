@@ -46,7 +46,7 @@ export default {
           thisData = data;
         })
         .then(() => this.graphInit(thisData))
-        .catch((error) => console.log(error));
+        .catch((error) => throw new Error(`Unable to get data: ${error}`));
     },
 
     // draws treemap, legend, and tooltip

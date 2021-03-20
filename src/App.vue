@@ -24,8 +24,6 @@ const treeData = {
   },
 };
 
-console.log(treeData.movie.desc);
-
 export default {
   name: 'App',
 
@@ -64,8 +62,6 @@ export default {
         default:
           throw new Error(`Unknown button selection: ${category}`);
       }
-
-      console.log(this.url);
     },
   },
 };
