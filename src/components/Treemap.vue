@@ -33,6 +33,7 @@ export default {
   },
 
   created() {
+    // show default data on load
     this.getData(this.dataUrl);
   },
 
@@ -192,6 +193,7 @@ export default {
     },
 
     // take in the index of entry item and return a position of that item in its set
+    // see: https://stackoverflow.com/questions/51520596/spread-d3-js-legend-on-two-columns
     positionLegendColumns(index) {
       const cols = 3; // number of columns
       const height = 22; // height of entry, vertical space between entries
