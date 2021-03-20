@@ -21,8 +21,8 @@ export default {
 
   data() {
     return {
-      widthTreeMap: 875,
-      heightTreeMap: 715,
+      widthTreeMap: 800,
+      heightTreeMap: 500,
       legendHeight: 200, // room for legend at bottom
       // color scheme computed using https://medialab.github.io/iwanthue/ with the fancy (light
       //  background) preset; 20 colors chosen to cover all three data sets
@@ -46,7 +46,7 @@ export default {
           thisData = data;
         })
         .then(() => this.graphInit(thisData))
-        .catch((error) => throw new Error(`Unable to get data: ${error}`));
+        .catch((error) => console.log(error));
     },
 
     // draws treemap, legend, and tooltip
@@ -285,9 +285,11 @@ export default {
   font-size: 0.8rem;
   padding: 0.5rem 0.6rem;
   position: absolute;
+  text-align: left;
 
   & .toolHeading {
     font-weight: bold;
+    font-size: 0.85rem;
   }
 }
 </style>
