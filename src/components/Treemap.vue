@@ -4,14 +4,26 @@ import * as d3 from 'd3';
 export default {
   name: 'Treemap',
 
+  props: {
+    dataUrl: {
+      type: String,
+      default: '',
+    },
+    title: {
+      type: String,
+      default: '',
+    },
+    desc: {
+      type: String,
+      default: '',
+    },
+  },
+
   data() {
     return {
-      // placeholder for the data set
-      dataUrl:
-      'https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json',
-      widthViewPort: 875,
-      heightViewPort: 715,
-      paddingBottom: 200, // room for legend at bottom
+      widthTreeMap: 875,
+      heightTreeMap: 715,
+      legendHeight: 200, // room for legend at bottom
       // color scheme computed using https://medialab.github.io/iwanthue/ with the fancy (light
       //  background) preset; 20 colors chosen to cover all three data sets
       colorBand: ['#c6b9ff', '#edd88d', '#3ab9ee', '#f09288', '#57e1d7', '#f698bc', '#88f1cc',
@@ -25,6 +37,19 @@ export default {
   },
 
   methods: {
+    // use javascript fetch to retrieve json data and pass it to graphInit
+    getData(jsonUrl) {
+      let thisData;
+      fetch(jsonUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          thisData = data;
+        })
+        .then(() => this.graphInit(thisData))
+        .catch((error) => console.log(error));
+    },
+
+    // draws treemap, legend, and tooltip
     graphInit(fetchData) {
       // main category groups
       const categories = fetchData.children.map((d) => d.name);
@@ -38,10 +63,14 @@ export default {
           this.colorBand,
         );
 
+      // first remove any previously drawn map
+      d3.select('#treemap > svg').remove();
+      d3.select('#legend > svg').remove();
+
       const svg = d3.select('#treemap')
         .append('svg')
-        .attr('width', this.widthViewPort)
-        .attr('height', this.heightViewPort);
+        .attr('width', this.widthTreeMap)
+        .attr('height', this.heightTreeMap);
 
       // svg group for the mapping of data; helps keep data graphics separate from axis
       const map = svg.append('g')
@@ -53,8 +82,9 @@ export default {
         .sum((d) => d.value)
         .sort((a, b) => b.value - a.value); // arrange categories from largest to smallest
 
+      // tell D3 we want a treemap; set the size and padding
       d3.treemap()
-        .size([this.widthViewPort, this.heightViewPort - this.paddingBottom])
+        .size([this.widthTreeMap, this.heightTreeMap])
         .padding(0.4)(root);
 
       // puts text and rect into their own svg groups; NOTE: only entering data here is required
@@ -122,16 +152,22 @@ export default {
             .style('display', 'none');
         });
 
+      // setup legend area
+      const legend = d3.select('#legend')
+        .append('svg')
+        .attr('width', this.widthTreeMap)
+        .attr('height', this.legendHeight);
+
       // area of svg where our legend entries live
-      const legendContainer = map.append('g')
+      const legendContainer = legend.append('g')
         .attr('id', 'legend')
         .attr('class', 'legend')
-        .attr('transform',
-          `translate(${this.widthViewPort / 3}, ${this.heightViewPort - this.paddingBottom})`);
+        // center the entries
+        .attr('transform', `translate(${this.widthTreeMap / 3.5}, 0)`);
 
       // set position of each entry
       // see: https://stackoverflow.com/questions/51520596/spread-d3-js-legend-on-two-columns
-      const legend = legendContainer.selectAll('g')
+      const legendEntries = legendContainer.selectAll('g')
         .data(categories)
         .enter()
         .append('g')
@@ -139,13 +175,13 @@ export default {
 
       const squareSize = 15;
 
-      legend.append('rect')
+      legendEntries.append('rect')
         .attr('width', squareSize)
         .attr('height', squareSize)
         .style('fill', (d) => colorScale(d))
         .attr('class', 'legend-item');
 
-      legend.append('text')
+      legendEntries.append('text')
         // set x and y to set text next to rect, otherwise it gets drawn above
         .attr('x', 18)
         .attr('y', 12)
@@ -167,21 +203,10 @@ export default {
 
       return `translate(${x}, ${y})`;
     },
-
-    // use javascript fetch to retrieve json data and pass it to graphInit
-    getData(jsonUrl) {
-      let thisData;
-      fetch(jsonUrl)
-        .then((response) => response.json())
-        .then((data) => {
-          thisData = data;
-        })
-        .then(() => this.graphInit(thisData))
-        .catch((error) => console.log(error));
-    },
   },
 
   watch: {
+    // draw new chart, title, and description on parent selection
     dataUrl(val) {
       this.getData(val);
     },
@@ -192,26 +217,28 @@ export default {
 <template>
   <h1
     class="project-title"
-    id="title"
-  >
-  Video Game Sales
+    id="title">
+  {{ title }}
   </h1>
   <p
     class="description"
-    id="description"
-  >
-  Top 100 Most Sold Video Games Grouped by Platform<br>
-  (In Millions of Units)
+    id="description">
+  {{ desc }}
   </p>
 
   <div class="conainter-treemap">
     <!-- d3 treemap map is drawn at #treemap -->
     <div
       class="treemap"
-      id="treemap"
-      >
+      id="treemap">
+    </div>
+    <!-- legend for treemap -->
+    <div
+      class="legend"
+      id="legend">
     </div>
   </div>
+
 </template>
 
 <style lang="scss">
@@ -226,6 +253,8 @@ export default {
   font-family: Roboto, Helvetica, Arial, sans-serif;
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
+  // using vue text interpelation, so preserve whitespace
+  white-space: pre;
 }
 
 .group-title {
@@ -234,7 +263,7 @@ export default {
 }
 
 .tile-text {
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   fill: $text-default;
   cursor: default;
 }
@@ -253,7 +282,7 @@ export default {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
   color: #fff;
   font-family: Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   padding: 0.5rem 0.6rem;
   position: absolute;
 
