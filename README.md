@@ -25,6 +25,18 @@ being seen by the test anymore. I believe this to be a limitation of the testing
 suite and not the project itself. Adding the feature of choosing graphs goes
 beyond, but was in the demo, the project's specification.)
 
+## Project Layout
+
+I use [Vue CLI](https://cli.vuejs.org/) to build this project, which uses
+various tools like webpack, babel, sass, and others to build a application
+easily servable on github pages.  The main scaffolding of the app is in
+`src/App.vue`. Here, the layout of the page and default data values for chosen
+treemap category are stored. In `src/componenets/Treemap.vue`, we'll find all
+the D3 code that draws the treemap, legend, and tooltips. In it, Vue calls the
+code to download the json data, pass it to the graph drawing function, and watch
+for updates to the chosen category to download the new json data, clear any
+previous D3-generated elements, and draw the new treemap, legend, and tooltips.
+
 ## Take-Aways
 
 This project was fairly simple to code (at least compared to the Choropleth Map
