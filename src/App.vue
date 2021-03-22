@@ -74,19 +74,21 @@ export default {
   >
 
   <!-- user selects treemap (game shown by default) -->
-  <div class="chart-select">
+  <div
+    class="chart-select"
+    title="choose treemap category">
     <span
       @click="changeVals('game')"
       class="category-select">
       game
     </span>
-    |
+    &nbsp;|&nbsp;
     <span
       @click="changeVals('movie')"
       class="category-select">
       movie
     </span>
-    |
+    &nbsp;|&nbsp;
     <span
       @click="changeVals('kickstarter')"
       class="category-select">
