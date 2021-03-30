@@ -68,12 +68,13 @@ export default {
       d3.select('#treemap > svg').remove();
       d3.select('#legend > svg').remove();
 
+      // Then allocate svg size for d3 to draw in
       const svg = d3.select('#treemap')
         .append('svg')
         .attr('width', this.widthTreeMap)
         .attr('height', this.heightTreeMap);
 
-      // svg group for the mapping of data; helps keep data graphics separate from axis
+      // svg group for the mapping of data; helps keep data graphics separate from legend
       const map = svg.append('g')
         .attr('id', 'map')
         .attr('class', 'map');
@@ -88,7 +89,7 @@ export default {
         .size([this.widthTreeMap, this.heightTreeMap])
         .padding(0.4)(root);
 
-      // puts text and rect into their own svg groups; NOTE: only entering data here is required
+      // puts text and rect into their own svg groups; NOTE: entering data here only is required
       //  set position here so word wrapping in text function works
       const blockGroup = map.selectAll('g')
         .data(root.leaves())
@@ -114,7 +115,7 @@ export default {
         .append('text')
         .selectAll('tspan')
         // split data name to create individual tspan elements; title are given in typical title
-        //  style with each the first letter of all major words capitalized
+        //  style with each of the first letter of all major words capitalized
         .data((d) => d.data.name.split(/(?=[A-Z][^A-Z])/g))
         .enter()
         .append('tspan') // how we get each word on own line
@@ -176,6 +177,7 @@ export default {
 
       const squareSize = 15;
 
+      // color coded boxes next to category name
       legendEntries.append('rect')
         .attr('width', squareSize)
         .attr('height', squareSize)
@@ -208,7 +210,7 @@ export default {
   },
 
   watch: {
-    // draw new chart, title, and description on parent selection
+    // draw new chart, title, and description on parent user selection
     dataUrl(val) {
       this.getData(val);
     },
